@@ -27,9 +27,9 @@ jobs:
     - name: Build
       run: go build -o s9cmd
     - name: Archive artifact
-      run: zip -r s9cmd_${{ matrix.os }}_${{ matrix.go-version }}.zip s9cmd
+      run: zip -r s9cmd_${{ matrix.os }}.zip s9cmd
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
-        name: s9cmd_${{ matrix.os }}_${{ matrix.go-version }}.zip
-        path: s9cmd_${{ matrix.os }}_${{ matrix.go-version }}.zip
+        name: s9cmd_${{ matrix.os }}.zip
+        path: s9cmd_${{ matrix.os }}.zip
