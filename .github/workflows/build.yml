@@ -10,6 +10,43 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build_push_dockerhub:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to DOckerhub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          file: ./Dockerfile
+          tags: cdfng/s9cmd:0.1.0
+#          cache-from: type=registry,ref=docker.io/cdfng/nginx:1.21.3
+#          cache-to: type=inline
+  build_push_ghcr:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GH_TOKEN }}
+    - name: Build and push
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        file: ./Dockerfile
+        tags: ghcr.io/hoverhuang/s9cmd:0.1.0
   build:
     strategy:
       matrix:
