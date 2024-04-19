@@ -1,40 +1,33 @@
-# s4cmd
-### Super S3 command line tool
-[![Build Status](https://travis-ci.com/bloomreach/s4cmd.svg?branch=master)](https://travis-ci.com/bloomreach/s4cmd) [![Join the chat at https://gitter.im/bloomreach/     s4cmd](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/bloomreach/s4cmd?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Packaging status](https://repology.org/badge/tiny-repos/s4cmd.svg)](https://repology.org/project/s4cmd/versions)
+# s9cmd for AWS S3 and S3 compatible storage services
+### Super S3 command line tool named s9cmd
+[![Build Status](https://travis-ci.com/bloomreach/s9cmd.svg?branch=main)](https://travis-ci.com/bloomreach/s9cmd) [![Join the chat at https://gitter.im/bloomreach/     s9cmd](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/bloomreach/s9cmd?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Packaging status](https://repology.org/badge/tiny-repos/s9cmd.svg)](https://repology.org/project/s9cmd/versions)
+----
+
+**Author**: Shuhao Huang ([@Hoverhuang-er](https://github.com/Hoverhuang-er))
 
 ----
 
-**Author**: Chou-han Yang ([@chouhanyang](https://github.com/chouhanyang))
+## What's New in s9cmd
 
-**Current Maintainers**: Debodirno Chandra ([@debodirno](https://github.com/debodirno)) | Naveen Vardhi ([@rozuur](https://github.com/rozuur)) | Navin Pai ([@navinpai](https://github.com/navinpai))
-
-----
-
-## What's New in s4cmd 2.x
-
-- Fully migrated from old boto 2.x to new [boto3](http://boto3.readthedocs.io/en/latest/reference/services/s3.html)  library, which provides more reliable and up-to-date S3 backend.
+- Fully migrated from old boto3 to new AWS Go SDKv2  library, which provides more reliable and high-performance S3 backend.
 - Support S3 `--API-ServerSideEncryption` along with **36 new API pass-through options**. See API pass-through options section for complete list.
 - Support batch delete (with delete_objects API) to delete up to 1000 files with single call. **100+ times faster** than sequential deletion.
-- Support `S4CMD_OPTS` environment variable for commonly used options such as `--API-ServerSideEncryption` across all your s4cmd operations.
+- Support `S9CMD_OPTS` environment variable for commonly used options such as `--API-ServerSideEncryption` across all your s9cmd operations.
 - Support moving files **larger than 5GB** with multipart upload. **20+ times faster** then sequential move operation when moving large files.
-- Support timestamp filtering with `--last-modified-before` and `--last-modified-after` options for all operations. Human friendly timestamps are supported, e.g. `--last-modified-before='2 months ago'`
 - Faster upload with lazy evaluation of md5 hash.
-- Listing large number of files with S3 pagination, with memory is the limit.
 - New directory to directory `dsync` command is better and standalone implementation to replace old `sync` command, which is implemented based on top of get/put/mv commands. `--delete-removed` work for all cases including local to s3, s3 to local, and s3 to s3. `sync` command preserves the old behavior in this version for compatibility.
-- [Support for S3 compatible storage services](https://github.com/bloomreach/s4cmd/issues/52) such as DreamHost and Cloudian using `--endpoint-url` (Community Supported Beta Feature).
-- Tested on both Python 2.7, 3.6, 3.7, 3.8, 3.9 and nightly.
-- Special thanks to [onera.com](http://www.onera.com) for supporting s4cmd.
-
+- [Support for S3 compatible storage services](https://github.com/bloomreach/s9cmd/issues/52) such as DreamHost and Cloudian using `--endpoint-url` (Community Supported Beta Feature).
+- Tested on both Go 1.13, 1.16, 1.20, and 1.22.
 
 ## Motivation
 
-S4cmd is a command-line utility for accessing
+s9cmd is a command-line utility for accessing and managing files on local filesystems
 [Amazon S3](http://en.wikipedia.org/wiki/Amazon_S3), inspired by
 [s3cmd](http://s3tools.org/s3cmd).
 
 We have used s3cmd heavily for a number of scripted, data-intensive
 applications. However as the need for a variety of small improvements arose, we
-created our own implementation, s4cmd. It is intended as an alternative to
+created our own implementation, s9cmd. It is intended as an alternative to
 s3cmd for enhanced performance and for large files, and with a number of
 additional features and fixes that we have found useful.
 
@@ -45,77 +38,76 @@ different behavior seems preferable, or for bugfixes.
 
 ## Features
 
-S4cmd supports the regular commands you might expect for fetching and storing
-files in S3: `ls`, `put`, `get`, `cp`, `mv`, `sync`, `del`, `du`.
-
-The main features that distinguish s4cmd are:
-
-- Simple (less than 1500 lines of code) and implemented in pure Python, based
-  on the widely used [Boto3](https://github.com/boto/boto3) library.
-- Multi-threaded/multi-connection implementation for enhanced performance on all
-  commands. As with many network-intensive applications (like web browsers),
-  accessing S3 in a single-threaded way is often significantly less efficient than
-  having multiple connections actively transferring data at once.  In general, we
-  get a 2X boost to upload/download speeds from this.
-- Path handling: S3 is not a traditional filesystem with built-in support for
-  directory structure: internally, there are only objects, not directories or
-  folders. However, most people use S3 in a hierarchical structure, with paths
-  separated by slashes, to emulate traditional filesystems. S4cmd follows
-  conventions to more closely replicate the behavior of traditional filesystems
-  in certain corner cases.  For example, "ls" and "cp" work much like in Unix
-  shells, to avoid odd surprises. (For examples see compatibility notes below.)
-- Wildcard support: Wildcards, including multiple levels of wildcards, like in
-  Unix shells, are handled. For example:
-  s3://my-bucket/my-folder/20120512/*/*chunk00?1?
-- Automatic retry: Failure tasks will be executed again after a delay.
-- Multi-part upload support for files larger than 5GB.
-- Handling of MD5s properly with respect to multi-part uploads (for the sordid
-  details of this, see below).
-- Miscellaneous enhancements and bugfixes:
-  - Partial file creation: Avoid creating empty target files if source does not
-    exist. Avoid creating partial output files when commands are interrupted.
-  - General thread safety: Tool can be interrupted or killed at any time without
-    being blocked by child threads or leaving incomplete or corrupt files in
-    place.
-  - Ensure exit code is nonzero on all failure scenarios (a very important
-    feature in scripts).
-  - Expected handling of symlinks (they are followed).
-  - Support both `s3://` and `s3n://` prefixes (the latter is common with
-    Amazon Elastic Mapreduce).
+s9cmd supports the regular commands you might expect for fetching and storing
+files in S3: `ls`, `put`, `get`, `cp`, `mv`, `sync`, `del`, `du`, `dsync`, and `batch-delete`.
 
 Limitations:
 
-- No CloudFront or other feature support.
+- Support CloudFront feature
 - Currently, we simulate `sync` with `get` and `put` with `--recursive --force --sync-check`.
 
-
 ## Installation and Setup
-You can install `s4cmd` [PyPI](https://pypi.python.org/pypi/s4cmd).
+You can install `s9cmd` with go install command:
 
 ```
-pip install s4cmd
+go install github.com/hoverhuanger/s9cmd
 ```
 
-- Copy or create a symbolic link so you can run `s4cmd.py` as `s4cmd`. (It is just
+Or you can download the binary from the [release page]() and put it in your PATH.
+
+```bash
+wget https://github.com/Hoverhuang-er/s9cmd/releases/download/v1.0.0/s9cmd
+```
+
+Or you also can install s9cmd with docker and k8s job:
+
+### Docker
+
+```bash
+docker pull hoverhuang/s9cmd:latest
+docker run -it hoverhuang/s9cmd:latest s9cmd --help
+```
+
+### Kubernetes Job
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: s9cmd-install
+spec:
+    template:
+        spec:
+        containers:
+        - name: s9cmd-install
+            image: hoverhuang/s9cmd:latest
+            command: ["s9cmd", "put", "s3://your-bucket/s9cmd", "/usr/local/bin/s9cmd"]
+        restartPolicy: Never
+```
+
+- Copy or create a symbolic link so you can run `s9cmd.py` as `s9cmd`. (It is just
 a single file!)
 - If you already have a `~/.s3cfg` file from configuring `s3cmd`, credentials
 from this file will be used.  Otherwise, set the `S3_ACCESS_KEY` and
 `S3_SECRET_KEY` environment variables to contain your S3 credentials.
 - If no keys are provided, but an IAM role is associated with the EC2 instance, it will
 be used transparently.
+- If you are using a non-AWS S3-compatible service, you can set the `S3_ENDPOINT` and `S3_REGION` environment variables.
 
 
-## s4cmd Commands
+## s9cmd Commands
 
-#### `s4cmd ls [path]`
+#### `s9cmd ls [path]`
 
 List all contents of a directory.
 
 * -r/--recursive: recursively display all contents including subdirectories under the given path.
 * -d/--show-directory: show the directory entry instead of its content.
+* -l/--long: show detailed information of each file.
+* -a/--all: show all files including hidden files.
+* -t/--last-modified-before: show files that were last modified before the given time.
+* -h/--last-modified-after: show files that were last modified after the given time.
 
-
-#### `s4cmd put [source] [target]`
+#### `s9cmd put [source] [target]`
 
 Upload local files up to S3.
 
@@ -124,7 +116,7 @@ Upload local files up to S3.
 *   -f/--force: override existing file instead of showing error message.
 *   -n/--dry-run: emulate the operation without real upload.
 
-#### `s4cmd get [source] [target]`
+#### `s9cmd get [source] [target]`
 
 Download files from S3 to local filesystem.
 
@@ -134,7 +126,7 @@ Download files from S3 to local filesystem.
 *   -n/--dry-run: emulate the operation without real download.
 
 
-#### `s4cmd dsync [source dir] [target dir]`
+#### `s9cmd dsync [source dir] [target dir]`
 
 Synchronize the contents of two directories. The directory can either be local or remote, but currently, it doesn't support two local directories.
 
@@ -144,7 +136,7 @@ Synchronize the contents of two directories. The directory can either be local o
 *   -n/--dry-run: emulate the operation without real sync.
 *   --delete-removed: delete files not in source directory.
 
-#### `s4cmd sync [source] [target]`
+#### `s9cmd sync [source] [target]`
 
 (Obsolete, use `dsync` instead) Synchronize the contents of two directories. The directory can either be local or remote, but currently, it doesn't support two local directories. This command simply invoke get/put/mv commands.
 
@@ -154,7 +146,7 @@ Synchronize the contents of two directories. The directory can either be local o
 *   -n/--dry-run: emulate the operation without real sync.
 *   --delete-removed: delete files not in source directory. Only works when syncing local directory to s3 directory.
 
-#### `s4cmd cp [source] [target]`
+#### `s9cmd cp [source] [target]`
 
 Copy a file or a directory from a S3 location to another.
 
@@ -163,7 +155,7 @@ Copy a file or a directory from a S3 location to another.
 *   -f/--force: override existing file instead of showing error message.
 *   -n/--dry-run: emulate the operation without real copy.
 
-#### `s4cmd mv [source] [target]`
+#### `s9cmd mv [source] [target]`
 
 Move a file or a directory from a S3 location to another.
 
@@ -172,22 +164,24 @@ Move a file or a directory from a S3 location to another.
 *   -f/--force: override existing file instead of showing error message.
 *   -n/--dry-run: emulate the operation without real move.
 
-#### `s4cmd del [path]`
+#### `s9cmd del [path]`
 
 Delete files or directories on S3.
 
 *   -r/--recursive: also delete directories recursively.
 *   -n/--dry-run: emulate the operation without real delete.
 
-#### `s4cmd du [path]`
+#### `s9cmd du [path]`
 
 Get the size of the given directory.
+*   -h/--human-readable: show the size in human-readable format.
+*   -s/--summarize: only show the total size of the directory.
 
 Available parameters:
 
 *   -r/--recursive: also add sizes of sub-directories recursively.
 
-## s4cmd Control Options
+## s9cmd Control Options
 
 ##### `-p S3CFG, --config=[filename]`
 path to s3cfg config file
@@ -266,9 +260,9 @@ after given parameter.
 
 ## S3 API Pass-through Options
 
-Those options are directly translated to boto3 API commands. The options provided will be filtered by the APIs that are taking parameters. For example, `--API-ServerSideEncryption` is only needed for `put_object`, `create_multipart_upload` but not for `list_buckets` and `get_objects` for example. Therefore, providing `--API-ServerSideEncryption` for `s4cmd ls` has no effect.
+Those options are directly translated to boto3 API commands. The options provided will be filtered by the APIs that are taking parameters. For example, `--API-ServerSideEncryption` is only needed for `put_object`, `create_multipart_upload` but not for `list_buckets` and `get_objects` for example. Therefore, providing `--API-ServerSideEncryption` for `s9cmd ls` has no effect.
 
-For more information, please see boto3 s3 documentations http://boto3.readthedocs.io/en/latest/reference/services/s3.html
+For more information, please see AWS Go SDKv2 s3 documentations []
 
 ##### `--API-ACL=[string]`
 The canned ACL to apply to the object.
@@ -384,16 +378,16 @@ If the bucket is configured as a website, redirects requests for this object to 
 
 ## Debugging Tips
 
-Simply enable `--debug` option to see the full log of s4cmd. If you even need to check what APIs are invoked from s4cmd to boto3, you can run:
+Simply enable `--debug` option to see the full log of s9cmd. If you even need to check what APIs are invoked from s9cmd to boto3, you can run:
 
 ```
-s4cmd --debug [op] .... 2>&1 >/dev/null | grep S3APICALL
+s9cmd --debug [op] .... 2>&1 >/dev/null | grep S3APICALL
 ```
 
 To see all the parameters sending to S3 API.
 
 
-## Compatibility between s3cmd and s4cmd
+## Compatibility between s3cmd and s9cmd
 
 Prefix matching: In s3cmd, unlike traditional filesystems, prefix names match listings:
 
@@ -403,14 +397,14 @@ s3://my-bucket/charlie/
 s3://my-bucket/chyang/
 ```
 
-In s4cmd, behavior is the same as with a Unix shell:
+In s9cmd, behavior is the same as with a Unix shell:
 
 ```
->>s4cmd ls s3://my-bucket/ch
->(empty)
+>>s9cmd ls s3://my-bucket/ch*
+2019/07/01 15:00:00 s3://my-bucket/charlie/
 ```
 
-To get prefix behavior, use explicit wildcards instead: s4cmd ls s3://my-bucket/ch*
+To get prefix behavior, use explicit wildcards instead: s9cmd ls s3://my-bucket/ch*
 
 Similarly, sync and cp commands emulate the Unix cp command, so directory to
 directory sync use different syntax:
@@ -420,16 +414,16 @@ directory sync use different syntax:
 ```
 will copy contents in dirA to dirB.
 ```
->> s4cmd sync s3://bucket/path/dirA s3://bucket/path/dirB/
+>> s9cmd sync s3://bucket/path/dirA s3://bucket/path/dirB/
 ```
 will copy dirA *into* dirB.
 
 To achieve the s3cmd behavior, use wildcards:
 ```
-s4cmd sync s3://bucket/path/dirA/* s3://bucket/path/dirB/
+s9cmd sync s3://bucket/path/dirA/* s3://bucket/path/dirB/
 ```
 
-Note s4cmd doesn't support dirA without trailing slash indicating dirA/* as
+Note s9cmd doesn't support dirA without trailing slash indicating dirA/* as
 what rsync supported.
 
 No automatic override for put command:
@@ -438,30 +432,6 @@ Use -f as well as get command.
 
 Bugfixes for handling of non-existent paths: Often s3cmd creates empty files when specified paths do not exist:
 s3cmd get s3://my-bucket/no_such_file downloads an empty file.
-s4cmd get s3://my-bucket/no_such_file returns an error.
+s9cmd get s3://my-bucket/no_such_file returns an error.
 s3cmd put no_such_file s3://my-bucket/ uploads an empty file.
-s4cmd put no_such_file s3://my-bucket/ returns an error.
-
-
-## Additional technical notes
-
-Etags, MD5s and multi-part uploads: Traditionally, the etag of an object in S3
-has been its MD5.  However, this changed with the introduction of S3 multi-part
-uploads; in this case the etag is still a unique ID, but it is not the MD5 of
-the file. Amazon has not revealed the definition of the etag in this case, so
-there is no way we can calculate and compare MD5s based on the etag header in
-general. The workaround we use is to upload the MD5 as a supplemental content
-header (called "md5", instead of "etag"). This enables s4cmd to check the MD5
-hash before upload or download. The only limitation is that this only works for
-files uploaded via s4cmd. Programs that do not understand this header will
-still have to download and verify the MD5 directly.
-
-
-## Unimplemented features
-
-- CloudFront or other feature support beyond basic S3 access.
-
-## Credits
-
-* Bloomreach http://www.bloomreach.com
-* Onera http://www.onera.com
+s9cmd put no_such_file s3://my-bucket/ returns an error.
