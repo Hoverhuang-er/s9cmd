@@ -59,7 +59,7 @@ go install github.com/hoverhuanger/s9cmd
 Or you can download the binary from the [release page]() and put it in your PATH.
 
 ```bash
-wget https://github.com/Hoverhuang-er/s9cmd/releases/download/v1.0.0/s9cmd
+wget https://github.com/Hoverhuang-er/s9cmd/actions/runs/8749507028/artifacts/1428564107
 ```
 
 Or you also can install s9cmd with docker and k8s job:
