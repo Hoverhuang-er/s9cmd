@@ -2,6 +2,7 @@
 ### Super S3 command line tool named s9cmd, Faster 20x to s3cmd and s4cmd
 [![Build Status](https://travis-ci.com/bloomreach/s9cmd.svg?branch=main)](https://travis-ci.com/bloomreach/s9cmd)
 [![Packaging status](https://repology.org/badge/tiny-repos/s9cmd.svg)](https://repology.org/project/s9cmd/versions)
+----
 [Release Download](https://github.com/Hoverhuang-er/s9cmd/actions/runs/8749507028#artifacts)
 ----
 
