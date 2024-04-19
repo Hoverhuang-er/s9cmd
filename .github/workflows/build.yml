@@ -32,5 +32,5 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
-        name: s9cmd_${{ matrix.os }}_${{ matrix.arch }}.zip
-        path: s9cmd_${{ matrix.os }}_${{ matrix.arch }}.zip
+        name: s9cmd_linux_${{ matrix.arch }}.zip
+        path: s9cmd_linux_${{ matrix.arch }}.zip

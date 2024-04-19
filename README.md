@@ -1,6 +1,7 @@
 # s9cmd for AWS S3 and S3 compatible storage services
 ### Super S3 command line tool named s9cmd
-[![Build Status](https://travis-ci.com/bloomreach/s9cmd.svg?branch=main)](https://travis-ci.com/bloomreach/s9cmd) [![Join the chat at https://gitter.im/bloomreach/     s9cmd](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/bloomreach/s9cmd?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Packaging status](https://repology.org/badge/tiny-repos/s9cmd.svg)](https://repology.org/project/s9cmd/versions)
+[![Build Status](https://travis-ci.com/bloomreach/s9cmd.svg?branch=main)](https://travis-ci.com/bloomreach/s9cmd)
+[![Packaging status](https://repology.org/badge/tiny-repos/s9cmd.svg)](https://repology.org/project/s9cmd/versions)
 ----
 
 **Author**: Shuhao Huang ([@Hoverhuang-er](https://github.com/Hoverhuang-er))
