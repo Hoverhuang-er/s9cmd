@@ -30,22 +30,6 @@ jobs:
           file: ./Dockerfile
           tags: cdfng/s9cmd:v1
 
-  build_push_ghcr:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: docker/login-action@v1
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GH_TOKEN }}
-    - name: Build and push
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        push: true
-        file: ./Dockerfile
-        tags: ghcr.io/hoverhuang/s9cmd:0.1.0
   build:
     strategy:
       matrix:
