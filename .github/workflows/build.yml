@@ -28,9 +28,8 @@ jobs:
           context: .
           push: true
           file: ./Dockerfile
-          tags: cdfng/s9cmd:0.1.0
-#          cache-from: type=registry,ref=docker.io/cdfng/nginx:1.21.3
-#          cache-to: type=inline
+          tags: cdfng/s9cmd:v1
+
   build_push_ghcr:
     runs-on: ubuntu-latest
     steps:
